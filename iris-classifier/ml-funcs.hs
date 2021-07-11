@@ -1,3 +1,7 @@
+-- a simple classifier made to solve the iris dataset
+-- TODO: add iris data
+-- TODO: create random weights
+
 matrix :: (Num a, Enum a) => a -> a -> [[a]]
 matrix x y =
   [ [ j + i * x
