@@ -1,5 +1,35 @@
+module Classifier
+  ( matrix,
+    vec_mul,
+    vec_minus,
+    mat_mul,
+    input,
+    weights,
+    targets,
+    e,
+    output,
+    output',
+    output_s,
+    output_s',
+    err,
+    err',
+    err_layer,
+    err'_layer,
+    sigmoid,
+    sigmoid',
+    sigmoid_layer,
+    sigmoid'_layer,
+    tanh',
+    tanh_layer,
+    tanh'_layer,
+    backprop,
+    update,
+    updateLoop,
+    fit,
+  )
+where
+
 -- a simple classifier made to solve the iris dataset
--- TODO: add iris data
 -- TODO: create random weights
 
 matrix :: (Num a, Enum a) => a -> a -> [[a]]
