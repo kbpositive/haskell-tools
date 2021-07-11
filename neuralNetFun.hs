@@ -53,10 +53,12 @@ err' p t = p - t
 
 err'_layer p t = [err' (p!!n) (t!!n) | n <- [0..(length p)-1]]
 
-backprop inpts wgts tgts = [[i*j | j <- (vec_mul (err'_layer (output_s inpts wgts) tgts) (output_s' inpts wgts))] | i <- (inpts!!0)]
+backprop inpts wgts tgts = [[i*j*0.1 | j <- (vec_mul (err'_layer (output_s inpts wgts) tgts) (output_s' inpts wgts))] | i <- (inpts!!0)]
 
 update inpts wgts tgts = [vec_minus (wgts!!n) ((backprop inpts wgts tgts)!!n) | n <- [0..(length wgts)-1]]
 
 updateLoop :: Integer -> [[Double]]
 updateLoop 0 = weights
-updateLoop x = update input (updateLoop (x - 1)) targets
+updateLoop z = update input (updateLoop (z - 1)) targets
+
+fit input targets epochs = err_layer (output_s input (updateLoop epochs)) targets
