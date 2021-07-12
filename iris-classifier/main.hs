@@ -4,4 +4,6 @@ import Classifier
 
 main :: IO ()
 main = do
-  print (fit input targets 5)
+  raw_data <- getContents
+  let line_data = [head raw_data, tail (raw_data) !! 0]
+  print (line_data)
