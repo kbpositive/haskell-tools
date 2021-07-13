@@ -47,14 +47,14 @@ mat_mul x y = [[sum (vec_mul a ([k !! b | k <- y])) | b <- [0 .. (length (y !! 0
 
 weights :: [[Double]]
 weights =
-  [ [0.01, 0.02, 0.03],
-    [0.04, 0.05, 0.02],
-    [0.07, 0.03, 0.01],
-    [0.05, 0.02, 0.04]
+  [ [-0.01, 0.02, 0.03],
+    [0.04, -0.05, 0.02],
+    [-0.07, 0.03, 0.01],
+    [0.05, 0.02, -0.04]
   ]
 
 targets :: [Double]
-targets = [0.0, 1.0, 1.0]
+targets = [1.0, 0.0, 1.0]
 
 output :: Floating a => [[a]] -> [[a]] -> [a]
 output x y = [tanh i | i <- ((mat_mul x y) !! 0)]
@@ -93,13 +93,13 @@ tanh'_layer :: Floating a => [a] -> [a]
 tanh'_layer x = [tanh' (x !! n) | n <- [0 .. (length x) -1]]
 
 err :: Floating a => a -> a -> a
-err p t = ((t - p) ** 2) / 2
+err p t = ((p - t) ** 2) / 2
 
 err_layer :: Floating a => [a] -> [a] -> [a]
 err_layer p t = [err (p !! n) (t !! n) | n <- [0 .. (length p) -1]]
 
 err' :: Num a => a -> a -> a
-err' p t = t - p
+err' p t = p - t
 
 err'_layer :: Num a => [a] -> [a] -> [a]
 err'_layer p t = [err' (p !! n) (t !! n) | n <- [0 .. (length p) -1]]
@@ -115,4 +115,4 @@ updateLoop 0 x = weights
 updateLoop z x = update x (updateLoop (z - 1) x) targets
 
 fit :: [[Double]] -> [Double] -> Integer -> [Double]
-fit input targets epochs = err_layer (output input (updateLoop epochs input)) targets
+fit input targets epochs = output input (updateLoop epochs input)
