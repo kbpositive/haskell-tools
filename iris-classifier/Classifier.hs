@@ -3,7 +3,6 @@ module Classifier
     vec_mul,
     vec_minus,
     mat_mul,
-    input,
     weights,
     targets,
     e,
@@ -46,19 +45,16 @@ vec_minus x y = [(x !! c) - (y !! c) | c <- [0 .. (length x) -1]]
 mat_mul :: Num a => [[a]] -> [[a]] -> [[a]]
 mat_mul x y = [[sum (vec_mul a ([k !! b | k <- y])) | b <- [0 .. (length (y !! 0)) -1]] | a <- x]
 
-input :: [[Double]]
-input = [[1.0, 2.0, 3.0, 1.0]]
-
 weights :: [[Double]]
 weights =
-  [ [0.1, 0.2, 0.3],
-    [0.4, 0.5, 0.2],
-    [0.7, 0.3, 0.1],
-    [0.5, 0.2, 0.4]
+  [ [0.01, 0.02, 0.03],
+    [0.04, 0.05, 0.02],
+    [0.07, 0.03, 0.01],
+    [0.05, 0.02, 0.04]
   ]
 
 targets :: [Double]
-targets = [1.0, 0.0, 1.0]
+targets = [0.0, 1.0, 1.0]
 
 output :: Floating a => [[a]] -> [[a]] -> [a]
 output x y = [tanh i | i <- ((mat_mul x y) !! 0)]
@@ -97,26 +93,26 @@ tanh'_layer :: Floating a => [a] -> [a]
 tanh'_layer x = [tanh' (x !! n) | n <- [0 .. (length x) -1]]
 
 err :: Floating a => a -> a -> a
-err p t = ((p - t) ** 2) / 2
+err p t = ((t - p) ** 2) / 2
 
 err_layer :: Floating a => [a] -> [a] -> [a]
 err_layer p t = [err (p !! n) (t !! n) | n <- [0 .. (length p) -1]]
 
 err' :: Num a => a -> a -> a
-err' p t = p - t
+err' p t = t - p
 
 err'_layer :: Num a => [a] -> [a] -> [a]
 err'_layer p t = [err' (p !! n) (t !! n) | n <- [0 .. (length p) -1]]
 
 backprop :: [[Double]] -> [[Double]] -> [Double] -> [[Double]]
-backprop inpts wgts tgts = [[i * j * 0.1 | j <- (vec_mul (err'_layer (output_s inpts wgts) tgts) (output_s' inpts wgts))] | i <- (inpts !! 0)]
+backprop inpts wgts tgts = [[i * j * 0.05 | j <- (vec_mul (err'_layer (output inpts wgts) tgts) (output' inpts wgts))] | i <- (inpts !! 0)]
 
 update :: [[Double]] -> [[Double]] -> [Double] -> [[Double]]
 update inpts wgts tgts = [vec_minus (wgts !! n) ((backprop inpts wgts tgts) !! n) | n <- [0 .. (length wgts) -1]]
 
-updateLoop :: Integer -> [[Double]]
-updateLoop 0 = weights
-updateLoop z = update input (updateLoop (z - 1)) targets
+updateLoop :: Integer -> [[Double]] -> [[Double]]
+updateLoop 0 x = weights
+updateLoop z x = update x (updateLoop (z - 1) x) targets
 
 fit :: [[Double]] -> [Double] -> Integer -> [Double]
-fit input targets epochs = err_layer (output_s input (updateLoop epochs)) targets
+fit input targets epochs = err_layer (output input (updateLoop epochs input)) targets
