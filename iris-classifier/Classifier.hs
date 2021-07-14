@@ -115,4 +115,4 @@ updateLoop 0 x = weights
 updateLoop z x = update x (updateLoop (z - 1) x) targets
 
 fit :: [[Double]] -> [Double] -> Integer -> [Double]
-fit input targets epochs = output input (updateLoop epochs input)
+fit inputs targets epochs = output inputs (updateLoop epochs inputs)
