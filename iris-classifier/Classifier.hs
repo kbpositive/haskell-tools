@@ -29,21 +29,21 @@ module Classifier
 where
 
 matrix :: (Num a, Enum a) => a -> a -> [[a]]
-matrix x y =
-  [ [ j + i * x
-      | j <- [1 .. x]
+matrix row col =
+  [ [ j + i * col
+      | j <- [1 .. col]
     ]
-    | i <- [0 .. (y -1)]
+    | i <- [0 .. (row -1)]
   ]
 
-vec_mul :: Num a => [a] -> [a] -> [a]
+vec_mul :: [Double] -> [Double] -> [Double]
 vec_mul x y = [(x !! c) * (y !! c) | c <- [0 .. (length x) -1]]
 
-vec_minus :: Num a => [a] -> [a] -> [a]
+vec_minus :: [Double] -> [Double] -> [Double]
 vec_minus x y = [(x !! c) - (y !! c) | c <- [0 .. (length x) -1]]
 
-mat_mul :: Num a => [[a]] -> [[a]] -> [[a]]
-mat_mul x y = [[sum (vec_mul a ([k !! b | k <- y])) | b <- [0 .. (length (y !! 0)) -1]] | a <- x]
+mat_mul :: [[Double]] -> [[Double]] -> [[Double]]
+mat_mul y x = [[sum (vec_mul a ([k !! b | k <- y])) | b <- [0 .. (length (y !! 0)) -1]] | a <- x]
 
 weights :: [[Double]]
 weights =
@@ -53,20 +53,20 @@ weights =
     [0.05, 0.02, -0.04]
   ]
 
-targets :: [Double]
-targets = [1.0, 0.0, 1.0]
+targets :: [[Double]]
+targets = [[1.0, 0.0, 1.0]]
 
-output :: Floating a => [[a]] -> [[a]] -> [a]
-output x y = [tanh i | i <- ((mat_mul x y) !! 0)]
+output :: [[Double]] -> [[Double]] -> [[Double]]
+output y x = [[tanh i | i <- ((mat_mul x y) !! n)] | n <- [0 .. length y - 1]]
 
-output' :: Floating a => [[a]] -> [[a]] -> [a]
-output' x y = [tanh' i | i <- ((mat_mul x y) !! 0)]
+output' :: [[Double]] -> [[Double]] -> [[Double]]
+output' y x = [[tanh' i | i <- ((mat_mul x y) !! n)] | n <- [0 .. length y - 1]]
 
-output_s :: [[Double]] -> [[Double]] -> [Double]
-output_s x y = [sigmoid i | i <- ((mat_mul x y) !! 0)]
+output_s :: [[Double]] -> [[Double]] -> [[Double]]
+output_s y x = [[sigmoid i | i <- ((mat_mul x y) !! n)] | n <- [0 .. length y - 1]]
 
-output_s' :: [[Double]] -> [[Double]] -> [Double]
-output_s' x y = [sigmoid' i | i <- ((mat_mul x y) !! 0)]
+output_s' :: [[Double]] -> [[Double]] -> [[Double]]
+output_s' y x = [[sigmoid' i | i <- ((mat_mul x y) !! n)] | n <- [0 .. length y - 1]]
 
 e :: Double
 e = 1 + sum [(1 / product [1 .. n]) | n <- [1 .. 10]]
@@ -92,27 +92,34 @@ tanh_layer x = [tanh (x !! n) | n <- [0 .. (length x) -1]]
 tanh'_layer :: Floating a => [a] -> [a]
 tanh'_layer x = [tanh' (x !! n) | n <- [0 .. (length x) -1]]
 
-err :: Floating a => a -> a -> a
+err :: Double -> Double -> Double
 err p t = ((p - t) ** 2) / 2
 
-err_layer :: Floating a => [a] -> [a] -> [a]
-err_layer p t = [err (p !! n) (t !! n) | n <- [0 .. (length p) -1]]
+err_layer :: [[Double]] -> [[Double]] -> [[Double]]
+err_layer p t = [[err ((p !! n) !! m) ((t !! n) !! m) | m <- [0 .. length (t !! n) - 1]] | n <- [0 .. length p -1]]
 
-err' :: Num a => a -> a -> a
+err' :: Double -> Double -> Double
 err' p t = p - t
 
-err'_layer :: Num a => [a] -> [a] -> [a]
-err'_layer p t = [err' (p !! n) (t !! n) | n <- [0 .. (length p) -1]]
+err'_layer :: [[Double]] -> [[Double]] -> [[Double]]
+err'_layer p t = [[err' ((p !! n) !! m) ((t !! n) !! m) | m <- [0 .. length (p !! n) - 1]] | n <- [0 .. length p -1]]
 
-backprop :: [[Double]] -> [[Double]] -> [Double] -> [[Double]]
-backprop inpts wgts tgts = [[i * j * 0.05 | j <- (vec_mul (err'_layer (output inpts wgts) tgts) (output' inpts wgts))] | i <- (inpts !! 0)]
+backprop :: [[Double]] -> [[Double]] -> [[Double]] -> [[Double]]
+backprop inpts wgts tgts =
+  [ [ sum
+        ( map (* (((inpts !! n) !! q) * 0.05)) (vec_mul ((err'_layer (output inpts wgts) tgts) !! n) ((output' inpts wgts) !! n))
+        )
+      | q <- [0 .. length (wgts !! n) - 1]
+    ]
+    | n <- [0 .. length wgts - 1]
+  ]
 
-update :: [[Double]] -> [[Double]] -> [Double] -> [[Double]]
-update inpts wgts tgts = [vec_minus (wgts !! n) ((backprop inpts wgts tgts) !! n) | n <- [0 .. (length wgts) -1]]
+update :: [[Double]] -> [[Double]] -> [[Double]] -> [[Double]]
+update inpts wgts tgts = [vec_minus (wgts !! n) ((backprop inpts wgts tgts) !! n) | n <- [0 .. length wgts -1]]
 
-updateLoop :: Integer -> [[Double]] -> [[Double]]
-updateLoop 0 x = weights
-updateLoop z x = update x (updateLoop (z - 1) x) targets
+updateLoop :: Integer -> [[Double]] -> [[Double]] -> [[Double]]
+updateLoop 0 x y = weights
+updateLoop z x y = update x (updateLoop (z - 1) x y) y
 
-fit :: [[Double]] -> [Double] -> Integer -> [Double]
-fit inputs targets epochs = output inputs (updateLoop epochs inputs)
+fit :: [[Double]] -> [[Double]] -> Integer -> [[Double]]
+fit inputs targets epochs = output inputs (updateLoop epochs inputs targets)
