@@ -19,7 +19,7 @@ module Classifier
     sigmoidLayer,
     sigmoidLayer',
     tanh',
-    tanh_layer,
+    tanhLayer,
     tanh'_layer,
     backprop,
     update,
@@ -86,8 +86,8 @@ sigmoidLayer' x = [sigmoid' (x !! n) | n <- [0 .. (length x) -1]]
 tanh' :: Floating a => a -> a
 tanh' x = 1 - ((tanh x) ** 2)
 
-tanh_layer :: Floating a => [a] -> [a]
-tanh_layer x = [tanh (x !! n) | n <- [0 .. (length x) -1]]
+tanhLayer :: Floating a => [a] -> [a]
+tanhLayer x = [tanh (x !! n) | n <- [0 .. (length x) -1]]
 
 tanh'_layer :: Floating a => [a] -> [a]
 tanh'_layer x = [tanh' (x !! n) | n <- [0 .. (length x) -1]]
