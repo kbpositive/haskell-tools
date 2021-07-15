@@ -4,7 +4,6 @@ module Classifier
     vec_minus,
     mat_mul,
     weights,
-    targets,
     e,
     output,
     output',
