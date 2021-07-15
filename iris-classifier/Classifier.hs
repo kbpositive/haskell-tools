@@ -13,7 +13,7 @@ module Classifier
     err,
     err',
     errLayer,
-    err'_layer,
+    errLayer',
     sigmoid,
     sigmoid',
     sigmoidLayer,
@@ -101,13 +101,13 @@ errLayer p t = [[err ((p !! n) !! m) ((t !! n) !! m) | m <- [0 .. length (t !! n
 err' :: Double -> Double -> Double
 err' p t = p - t
 
-err'_layer :: [[Double]] -> [[Double]] -> [[Double]]
-err'_layer p t = [[err' ((p !! n) !! m) ((t !! n) !! m) | m <- [0 .. length (p !! n) - 1]] | n <- [0 .. length p -1]]
+errLayer' :: [[Double]] -> [[Double]] -> [[Double]]
+errLayer' p t = [[err' ((p !! n) !! m) ((t !! n) !! m) | m <- [0 .. length (p !! n) - 1]] | n <- [0 .. length p -1]]
 
 backprop :: [[Double]] -> [[Double]] -> [[Double]] -> [[Double]]
 backprop inpts wgts tgts =
   [ [ sum
-        ( map (* (((inpts !! n) !! q) * 0.05)) (vec_mul ((err'_layer (output inpts wgts) tgts) !! n) ((output' inpts wgts) !! n))
+        ( map (* (((inpts !! n) !! q) * 0.05)) (vec_mul ((errLayer' (output inpts wgts) tgts) !! n) ((output' inpts wgts) !! n))
         )
       | q <- [0 .. length (wgts !! n) - 1]
     ]
