@@ -17,7 +17,7 @@ module Classifier
     sigmoid,
     sigmoid',
     sigmoidLayer,
-    sigmoid'_layer,
+    sigmoidLayer',
     tanh',
     tanh_layer,
     tanh'_layer,
@@ -80,8 +80,8 @@ sigmoid' x = (sigmoid x) * (1 - (sigmoid x))
 sigmoidLayer :: [Double] -> [Double]
 sigmoidLayer x = [sigmoid (x !! n) | n <- [0 .. (length x) -1]]
 
-sigmoid'_layer :: [Double] -> [Double]
-sigmoid'_layer x = [sigmoid' (x !! n) | n <- [0 .. (length x) -1]]
+sigmoidLayer' :: [Double] -> [Double]
+sigmoidLayer' x = [sigmoid' (x !! n) | n <- [0 .. (length x) -1]]
 
 tanh' :: Floating a => a -> a
 tanh' x = 1 - ((tanh x) ** 2)
