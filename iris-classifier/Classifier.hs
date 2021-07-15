@@ -12,7 +12,7 @@ module Classifier
     outputS',
     err,
     err',
-    err_layer,
+    errLayer,
     err'_layer,
     sigmoid,
     sigmoid',
@@ -95,8 +95,8 @@ tanhLayer' x = [tanh' (x !! n) | n <- [0 .. (length x) -1]]
 err :: Double -> Double -> Double
 err p t = ((p - t) ** 2) / 2
 
-err_layer :: [[Double]] -> [[Double]] -> [[Double]]
-err_layer p t = [[err ((p !! n) !! m) ((t !! n) !! m) | m <- [0 .. length (t !! n) - 1]] | n <- [0 .. length p -1]]
+errLayer :: [[Double]] -> [[Double]] -> [[Double]]
+errLayer p t = [[err ((p !! n) !! m) ((t !! n) !! m) | m <- [0 .. length (t !! n) - 1]] | n <- [0 .. length p -1]]
 
 err' :: Double -> Double -> Double
 err' p t = p - t
