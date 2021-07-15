@@ -103,7 +103,7 @@ errLayer' p t = [[err' ((p !! n) !! m) ((t !! n) !! m) | m <- [0 .. length (p !!
 backprop :: [[Double]] -> [[Double]] -> [[Double]] -> [[Double]]
 backprop inpts wgts tgts =
   [ [ sum
-        ( map (* (((inpts !! n) !! q) * 0.005)) (vec_mul ((errLayer' (output inpts wgts) tgts) !! n) ((output' inpts wgts) !! n))
+        ( map (* (((inpts !! n) !! q) * 0.005)) (vec_mul ((errLayer' (outputS inpts wgts) tgts) !! n) ((outputS' inpts wgts) !! n))
         )
       | q <- [0 .. length (wgts !! n) - 1]
     ]
@@ -118,4 +118,4 @@ updateLoop 0 x y = weights
 updateLoop z x y = update x (updateLoop (z - 1) x y) y
 
 fit :: [[Double]] -> [[Double]] -> Integer -> [[Double]]
-fit inputs targets epochs = output inputs (updateLoop epochs inputs targets)
+fit inputs targets epochs = outputS inputs (updateLoop epochs inputs targets)
