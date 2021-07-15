@@ -20,7 +20,7 @@ module Classifier
     sigmoidLayer',
     tanh',
     tanhLayer,
-    tanh'_layer,
+    tanhLayer',
     backprop,
     update,
     updateLoop,
@@ -89,8 +89,8 @@ tanh' x = 1 - ((tanh x) ** 2)
 tanhLayer :: Floating a => [a] -> [a]
 tanhLayer x = [tanh (x !! n) | n <- [0 .. (length x) -1]]
 
-tanh'_layer :: Floating a => [a] -> [a]
-tanh'_layer x = [tanh' (x !! n) | n <- [0 .. (length x) -1]]
+tanhLayer' :: Floating a => [a] -> [a]
+tanhLayer' x = [tanh' (x !! n) | n <- [0 .. (length x) -1]]
 
 err :: Double -> Double -> Double
 err p t = ((p - t) ** 2) / 2
