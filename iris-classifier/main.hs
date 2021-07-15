@@ -16,5 +16,5 @@ main = do
   let labels = [last i | i <- instances_split]
   let individuals = [labels !! (i - 1) | i <- [1 .. length labels - 1], labels !! (i -1) /= labels !! i || i == (length labels - 1)]
   let target_labels = [[fromIntegral (fromEnum (i == j)) | j <- [0 .. length individuals - 1]] | i <- [0 .. length individuals - 1]]
-  let targets = [[i == n | i <- individuals] | n <- labels]
-  print (individuals)
+  let targets = [[fromIntegral (fromEnum (i == n)) | i <- individuals] | n <- labels]
+  print ((fit inp targets 100) !! 57)
