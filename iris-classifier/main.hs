@@ -14,6 +14,7 @@ main = do
   let inp = [[read (init n) :: Double | n <- init i] | i <- instances_split]
   let commas_pos = [0 : [x + 1 | (x, y) <- zip [0 ..] n, [y] == "," || x == (length n -1)] | n <- iris_data]
   let labels = [last i | i <- instances_split]
-  let individuals = [labels !! i | i <- [1 .. length labels - 1], labels !! (i -1) /= labels !! i || i == (length labels - 1)]
+  let individuals = [labels !! (i - 1) | i <- [1 .. length labels - 1], labels !! (i -1) /= labels !! i || i == (length labels - 1)]
   let target_labels = [[fromIntegral (fromEnum (i == j)) | j <- [0 .. length individuals - 1]] | i <- [0 .. length individuals - 1]]
-  print (target_labels)
+  let targets = [[i == n | i <- individuals] | n <- labels]
+  print (individuals)
