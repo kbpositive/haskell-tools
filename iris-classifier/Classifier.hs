@@ -16,7 +16,7 @@ module Classifier
     err'_layer,
     sigmoid,
     sigmoid',
-    sigmoid_layer,
+    sigmoidLayer,
     sigmoid'_layer,
     tanh',
     tanh_layer,
@@ -77,8 +77,8 @@ sigmoid x = 1 / (1 + e ** (- x))
 sigmoid' :: Double -> Double
 sigmoid' x = (sigmoid x) * (1 - (sigmoid x))
 
-sigmoid_layer :: [Double] -> [Double]
-sigmoid_layer x = [sigmoid (x !! n) | n <- [0 .. (length x) -1]]
+sigmoidLayer :: [Double] -> [Double]
+sigmoidLayer x = [sigmoid (x !! n) | n <- [0 .. (length x) -1]]
 
 sigmoid'_layer :: [Double] -> [Double]
 sigmoid'_layer x = [sigmoid' (x !! n) | n <- [0 .. (length x) -1]]
