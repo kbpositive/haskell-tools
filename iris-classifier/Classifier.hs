@@ -8,8 +8,8 @@ module Classifier
     e,
     output,
     output',
-    output_s,
-    output_s',
+    outputS,
+    outputS',
     err,
     err',
     err_layer,
@@ -62,11 +62,11 @@ output y x = [[tanh i | i <- ((mat_mul x y) !! n)] | n <- [0 .. length y - 1]]
 output' :: [[Double]] -> [[Double]] -> [[Double]]
 output' y x = [[tanh' i | i <- ((mat_mul x y) !! n)] | n <- [0 .. length y - 1]]
 
-output_s :: [[Double]] -> [[Double]] -> [[Double]]
-output_s y x = [[sigmoid i | i <- ((mat_mul x y) !! n)] | n <- [0 .. length y - 1]]
+outputS :: [[Double]] -> [[Double]] -> [[Double]]
+outputS y x = [[sigmoid i | i <- ((mat_mul x y) !! n)] | n <- [0 .. length y - 1]]
 
-output_s' :: [[Double]] -> [[Double]] -> [[Double]]
-output_s' y x = [[sigmoid' i | i <- ((mat_mul x y) !! n)] | n <- [0 .. length y - 1]]
+outputS' :: [[Double]] -> [[Double]] -> [[Double]]
+outputS' y x = [[sigmoid' i | i <- ((mat_mul x y) !! n)] | n <- [0 .. length y - 1]]
 
 e :: Double
 e = 1 + sum [(1 / product [1 .. n]) | n <- [1 .. 10]]
