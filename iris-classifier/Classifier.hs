@@ -103,7 +103,7 @@ errLayer' p t = [[err' ((p !! n) !! m) ((t !! n) !! m) | m <- [0 .. length (p !!
 backprop :: [[Double]] -> [[Double]] -> [[Double]] -> [[Double]]
 backprop inpts wgts tgts =
   [ [ sum
-        ( map (* (((inpts !! n) !! q) * 0.05)) (vec_mul ((errLayer' (output inpts wgts) tgts) !! n) ((output' inpts wgts) !! n))
+        ( map (* (((inpts !! n) !! q) * 0.005)) (vec_mul ((errLayer' (output inpts wgts) tgts) !! n) ((output' inpts wgts) !! n))
         )
       | q <- [0 .. length (wgts !! n) - 1]
     ]
