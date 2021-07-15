@@ -53,9 +53,6 @@ weights =
     [0.05, 0.02, -0.04]
   ]
 
-targets :: [[Double]]
-targets = [[1.0, 0.0, 1.0]]
-
 output :: [[Double]] -> [[Double]] -> [[Double]]
 output y x = [[tanh i | i <- ((mat_mul x y) !! n)] | n <- [0 .. length y - 1]]
 
