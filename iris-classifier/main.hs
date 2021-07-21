@@ -19,8 +19,15 @@ main = do
   let targets = [[fromIntegral (fromEnum (i == n)) | i <- individuals] | n <- labels]
 
   -- test inputs
-  let o_1 = 1 : output (inp !! 0) (weights !! 0)
-  let o_2 = output o_1 (weights !! 1)
-  let measure = errLayer o_2 (targets !! 0)
+  let n = 120
 
-  print (measure)
+  let o_1 = 1 : output (inp !! n) (weights !! 0)
+  let o_2 = output o_1 (weights !! 1)
+  let measure = errLayer o_2 (targets !! n)
+
+  let u_0 = hadamard (vecMinus o_2 (targets !! n)) (output' o_1 (weights !! 1))
+  let u_1 = hadamard (vecByMat u_0 (transpose (weights !! 1))) (1 : (output' (inp !! n) (weights !! 0)))
+
+  let newWeights = [matMinus (weights !! 0) (tensor (inp !! n) (vecMul 0.1 u_1)), matMinus (weights !! 1) (tensor o_1 (vecMul 0.1 u_0))]
+
+  print (o_2, output (1 : (output (inp !! n) (newWeights !! 0))) (newWeights !! 1), (targets !! n))

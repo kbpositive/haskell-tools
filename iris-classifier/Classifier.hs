@@ -12,6 +12,12 @@ module Classifier
     sigmoid,
     sigmoid',
     update,
+    hadamard,
+    tensor,
+    midLayer',
+    transpose,
+    vecMul,
+    matMinus,
   )
 where
 
@@ -33,7 +39,7 @@ vecMul :: Double -> [Double] -> [Double]
 vecMul x y = [x * (y !! c) | c <- [0 .. length y -1]]
 
 matMinus :: [[Double]] -> [[Double]] -> [[Double]]
-matMinus x y = [[((x !! c) !! d) - ((y !! c) !! d) | c <- [0 .. length (head x) -1]] | d <- [0 .. length x - 1]]
+matMinus x y = [[((x !! d) !! c) - ((y !! d) !! c) | c <- [0 .. length (head x) - 1]] | d <- [0 .. length x - 1]]
 
 hadamard :: [Double] -> [Double] -> [Double]
 hadamard x y = [(x !! c) * (y !! c) | c <- [0 .. length x -1]]
@@ -56,8 +62,7 @@ weights =
     [ [0.09, 0.02, 0.03],
       [0.04, 0.07, 0.07],
       [0.01, 0.04, 0.08],
-      [0.02, 0.02, 0.07],
-      [0.02, 0.01, 0.09]
+      [0.02, 0.02, 0.07]
     ]
   ]
 
