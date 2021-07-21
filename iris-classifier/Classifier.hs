@@ -42,27 +42,28 @@ vec_minus :: [Double] -> [Double] -> [Double]
 vec_minus x y = [(x !! c) - (y !! c) | c <- [0 .. (length x) -1]]
 
 mat_mul :: [[Double]] -> [[Double]] -> [[Double]]
-mat_mul y x = [[sum (vec_mul a ([k !! b | k <- y])) | b <- [0 .. (length (y !! 0)) -1]] | a <- x]
+mat_mul x y = [[sum (vec_mul a ([k !! b | k <- y])) | b <- [0 .. (length (y !! 0)) -1]] | a <- x]
 
 weights :: [[Double]]
 weights =
   [ [0.01, 0.02, 0.03],
     [0.04, 0.05, 0.02],
     [0.07, 0.03, 0.01],
+    [0.02, 0.06, 0.07],
     [0.05, 0.02, 0.04]
   ]
 
 output :: [[Double]] -> [[Double]] -> [[Double]]
-output y x = [[tanh i | i <- ((mat_mul x y) !! n)] | n <- [0 .. length y - 1]]
+output x y = [[tanh i | i <- n] | n <- (mat_mul x y)]
 
 output' :: [[Double]] -> [[Double]] -> [[Double]]
-output' y x = [[tanh' i | i <- ((mat_mul x y) !! n)] | n <- [0 .. length y - 1]]
+output' x y = [[tanh' i | i <- n] | n <- (mat_mul x y)]
 
 outputS :: [[Double]] -> [[Double]] -> [[Double]]
-outputS y x = [[sigmoid i | i <- ((mat_mul x y) !! n)] | n <- [0 .. length y - 1]]
+outputS x y = [[sigmoid i | i <- n] | n <- (mat_mul x y)]
 
 outputS' :: [[Double]] -> [[Double]] -> [[Double]]
-outputS' y x = [[sigmoid' i | i <- ((mat_mul x y) !! n)] | n <- [0 .. length y - 1]]
+outputS' x y = [[sigmoid' i | i <- n] | n <- (mat_mul x y)]
 
 e :: Double
 e = 1 + sum [(1 / product [1 .. n]) | n <- [1 .. 10]]
@@ -103,7 +104,7 @@ errLayer' p t = [[err' ((p !! n) !! m) ((t !! n) !! m) | m <- [0 .. length (p !!
 backprop :: [[Double]] -> [[Double]] -> [[Double]] -> [[Double]]
 backprop inpts wgts tgts =
   [ [ sum
-        ( map (* (((inpts !! n) !! q) * 0.01)) (vec_mul ((errLayer' (output inpts wgts) tgts) !! n) ((output' inpts wgts) !! n))
+        ( map (* (((inpts !! n) !! q) * 0.05)) (vec_mul ((errLayer' (output inpts wgts) tgts) !! n) ((output' inpts wgts) !! n))
         )
       | q <- [0 .. length (inpts !! n) - 1]
     ]
