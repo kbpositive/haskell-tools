@@ -73,7 +73,7 @@ sigmoid' x = sigmoid x * (1 - sigmoid x)
 output :: [Double] -> [[Double]] -> [Double]
 output x y = [sigmoid i | i <- vecByMat x y]
 
-output' :: [Double] -> [Double] -> [Double]
+output' :: [Double] -> [[Double]] -> [Double]
 output' x y = [sigmoid' i | i <- vecByMat x y]
 
 err :: Double -> Double -> Double
