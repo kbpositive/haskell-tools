@@ -24,7 +24,7 @@ matrix row col =
   ]
 
 vecByMat :: [Double] -> [[Double]] -> [Double]
-vecByMat x y = [sum ([((y !! d) !! c) * (x !! c) | c <- [0 .. length y - 1]]) | d <- [0 .. length (head y) - 1]]
+vecByMat x y = [sum ([((y !! c) !! d) * (x !! c) | c <- [0 .. length y - 1]]) | d <- [0 .. length (head y) - 1]]
 
 vecMinus :: [Double] -> [Double] -> [Double]
 vecMinus x y = [(x !! c) - (y !! c) | c <- [0 .. length x -1]]
@@ -47,11 +47,11 @@ transpose x = map head x : transpose (map tail x)
 
 weights :: [[[Double]]]
 weights =
-  [ [ [0.01, 0.02, 0.03],
-      [0.04, 0.05, 0.02],
-      [0.07, 0.03, 0.01],
-      [0.02, 0.06, 0.07],
-      [0.05, 0.02, 0.04]
+  [ [ [0.01, 0.02, 0.03, 0.07],
+      [0.04, 0.05, 0.02, 0.04],
+      [0.07, 0.03, 0.01, 0.03],
+      [0.02, 0.06, 0.07, 0.08],
+      [0.05, 0.02, 0.04, 0.01]
     ],
     [ [0.09, 0.02, 0.03],
       [0.04, 0.07, 0.07],

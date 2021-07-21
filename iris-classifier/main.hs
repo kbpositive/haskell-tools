@@ -17,4 +17,10 @@ main = do
   let individuals = [labels !! (i - 1) | i <- [1 .. length labels - 1], labels !! (i -1) /= labels !! i || i == (length labels - 1)]
   let target_labels = [[fromIntegral (fromEnum (i == j)) | j <- [0 .. length individuals - 1]] | i <- [0 .. length individuals - 1]]
   let targets = [[fromIntegral (fromEnum (i == n)) | i <- individuals] | n <- labels]
-  print ((fit inp targets 10) !! 5)
+
+  -- test inputs
+  let o_1 = 1 : output (inp !! 0) (weights !! 0)
+  let o_2 = output o_1 (weights !! 1)
+  let measure = errLayer o_2 (targets !! 0)
+
+  print (measure)
