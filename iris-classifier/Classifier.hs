@@ -1,29 +1,17 @@
 module Classifier
   ( matrix,
-    vec_mul,
-    vec_minus,
-    mat_mul,
+    vecByMat,
+    vecMinus,
     weights,
     e,
     output,
     output',
-    outputS,
-    outputS',
     err,
-    err',
     errLayer,
     errLayer',
     sigmoid,
     sigmoid',
-    sigmoidLayer,
-    sigmoidLayer',
-    tanh',
-    tanhLayer,
-    tanhLayer',
-    backprop,
     update,
-    updateLoop,
-    fit,
   )
 where
 
@@ -35,88 +23,70 @@ matrix row col =
     | i <- [0 .. (row -1)]
   ]
 
-vec_mul :: [Double] -> [Double] -> [Double]
-vec_mul x y = [(x !! c) * (y !! c) | c <- [0 .. (length x) -1]]
+vecByMat :: [Double] -> [[Double]] -> [Double]
+vecByMat x y = [sum ([((y !! d) !! c) * (x !! c) | c <- [0 .. length y - 1]]) | d <- [0 .. length (head y) - 1]]
 
-vec_minus :: [Double] -> [Double] -> [Double]
-vec_minus x y = [(x !! c) - (y !! c) | c <- [0 .. (length x) -1]]
+vecMinus :: [Double] -> [Double] -> [Double]
+vecMinus x y = [(x !! c) - (y !! c) | c <- [0 .. length x -1]]
 
-mat_mul :: [[Double]] -> [[Double]] -> [[Double]]
-mat_mul x y = [[sum (vec_mul a ([k !! b | k <- y])) | b <- [0 .. (length (y !! 0)) -1]] | a <- x]
+vecMul :: Double -> [Double] -> [Double]
+vecMul x y = [x * (y !! c) | c <- [0 .. length y -1]]
 
-weights :: [[Double]]
+matMinus :: [[Double]] -> [[Double]] -> [[Double]]
+matMinus x y = [[((x !! c) !! d) - ((y !! c) !! d) | c <- [0 .. length (head x) -1]] | d <- [0 .. length x - 1]]
+
+hadamard :: [Double] -> [Double] -> [Double]
+hadamard x y = [(x !! c) * (y !! c) | c <- [0 .. length x -1]]
+
+tensor :: [Double] -> [Double] -> [[Double]]
+tensor x y = [[a * b | b <- y] | a <- x]
+
+transpose :: [[Double]] -> [[Double]]
+transpose ([] : _) = []
+transpose x = map head x : transpose (map tail x)
+
+weights :: [[[Double]]]
 weights =
-  [ [0.01, 0.02, 0.03],
-    [0.04, 0.05, 0.02],
-    [0.07, 0.03, 0.01],
-    [0.02, 0.06, 0.07],
-    [0.05, 0.02, 0.04]
+  [ [ [0.01, 0.02, 0.03],
+      [0.04, 0.05, 0.02],
+      [0.07, 0.03, 0.01],
+      [0.02, 0.06, 0.07],
+      [0.05, 0.02, 0.04]
+    ],
+    [ [0.09, 0.02, 0.03],
+      [0.04, 0.07, 0.07],
+      [0.01, 0.04, 0.08],
+      [0.02, 0.02, 0.07],
+      [0.02, 0.01, 0.09]
+    ]
   ]
 
-output :: [[Double]] -> [[Double]] -> [[Double]]
-output x y = [[tanh i | i <- n] | n <- (mat_mul x y)]
-
-output' :: [[Double]] -> [[Double]] -> [[Double]]
-output' x y = [[tanh' i | i <- n] | n <- (mat_mul x y)]
-
-outputS :: [[Double]] -> [[Double]] -> [[Double]]
-outputS x y = [[sigmoid i | i <- n] | n <- (mat_mul x y)]
-
-outputS' :: [[Double]] -> [[Double]] -> [[Double]]
-outputS' x y = [[sigmoid' i | i <- n] | n <- (mat_mul x y)]
-
 e :: Double
-e = 1 + sum [(1 / product [1 .. n]) | n <- [1 .. 10]]
+e = 1 + sum [1 / product [1 .. n] | n <- [1 .. 10]]
 
 sigmoid :: Double -> Double
 sigmoid x = 1 / (1 + e ** (- x))
 
 sigmoid' :: Double -> Double
-sigmoid' x = (sigmoid x) * (1 - (sigmoid x))
+sigmoid' x = sigmoid x * (1 - sigmoid x)
 
-sigmoidLayer :: [Double] -> [Double]
-sigmoidLayer x = [sigmoid (x !! n) | n <- [0 .. (length x) -1]]
+output :: [Double] -> [[Double]] -> [Double]
+output x y = [sigmoid i | i <- vecByMat x y]
 
-sigmoidLayer' :: [Double] -> [Double]
-sigmoidLayer' x = [sigmoid' (x !! n) | n <- [0 .. (length x) -1]]
-
-tanh' :: Floating a => a -> a
-tanh' x = 1 - ((tanh x) ** 2)
-
-tanhLayer :: Floating a => [a] -> [a]
-tanhLayer x = [tanh (x !! n) | n <- [0 .. (length x) -1]]
-
-tanhLayer' :: Floating a => [a] -> [a]
-tanhLayer' x = [tanh' (x !! n) | n <- [0 .. (length x) -1]]
+output' :: [Double] -> [Double] -> [Double]
+output' x y = [sigmoid' i | i <- vecByMat x y]
 
 err :: Double -> Double -> Double
 err p t = ((p - t) ** 2) / 2
 
-errLayer :: [[Double]] -> [[Double]] -> [[Double]]
-errLayer p t = [[err ((p !! n) !! m) ((t !! n) !! m) | m <- [0 .. length (t !! n) - 1]] | n <- [0 .. length p -1]]
+errLayer :: [Double] -> [Double] -> [Double]
+errLayer p t = [err (p !! n) (t !! n) | n <- [0 .. length p -1]]
 
-err' :: Double -> Double -> Double
-err' p t = p - t
+errLayer' :: [Double] -> [Double] -> [Double] -> [Double]
+errLayer' p q t = hadamard (vecMinus p t) q
 
-errLayer' :: [[Double]] -> [[Double]] -> [[Double]]
-errLayer' p t = [[err' ((p !! n) !! m) ((t !! n) !! m) | m <- [0 .. length (p !! n) - 1]] | n <- [0 .. length p -1]]
+midLayer' :: [Double] -> [Double] -> [[Double]] -> [Double]
+midLayer' p q w = hadamard (vecByMat p (transpose w)) q
 
-backprop :: [[Double]] -> [[Double]] -> [[Double]] -> [[Double]]
-backprop inpts wgts tgts =
-  [ [ sum
-        ( map (* (((inpts !! n) !! q) * 0.05)) (vec_mul ((errLayer' (output inpts wgts) tgts) !! n) ((output' inpts wgts) !! n))
-        )
-      | q <- [0 .. length (inpts !! n) - 1]
-    ]
-    | n <- [0 .. length inpts - 1]
-  ]
-
-update :: [[Double]] -> [[Double]] -> [[Double]] -> [[Double]]
-update inpts wgts tgts = [vec_minus (wgts !! n) ((backprop inpts wgts tgts) !! n) | n <- [0 .. length wgts -1]]
-
-updateLoop :: Integer -> [[Double]] -> [[Double]] -> [[Double]]
-updateLoop 0 x y = weights
-updateLoop z x y = update x (updateLoop (z - 1) x y) y
-
-fit :: [[Double]] -> [[Double]] -> Integer -> [[Double]]
-fit inputs targets epochs = output inputs (updateLoop epochs inputs targets)
+update :: [Double] -> [[Double]] -> [Double] -> [[Double]]
+update i wgts u = matMinus wgts (tensor i (vecMul 0.1 u))
