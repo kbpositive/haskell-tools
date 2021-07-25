@@ -120,7 +120,7 @@ feedForward a inp wgts =
     else [output n (wgts !! 1) | n <- (feedForward (a -1) inp wgts)]
 
 measure :: [[Double]] -> [[[Double]]] -> [[Double]] -> [[Double]]
-measure inp wgts tgts = [errLayer ((feedForward (length tgts - 1) inp wgts) !! n) (tgts !! n) | n <- [0 .. length tgts - 1]]
+measure inp wgts tgts = [errLayer ((feedForward 1 inp wgts) !! n) (tgts !! n) | n <- [0 .. length tgts - 1]]
 
 --halfProduct :: Int -> [[Double]] -> [[Double]] -> [[Double]] -> [[Double]] -> [[Double]]
 --halfProduct a inp out wgts tgts = if a == 0 then [hadamard (vecMinus ((out!!1) !! n) (tgts !! n)) (output' ((out!!0) !! n) (wgts !! 1)) | n <- [0 .. length inp - 1]]
