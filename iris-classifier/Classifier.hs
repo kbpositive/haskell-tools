@@ -20,10 +20,10 @@ module Classifier
     vecMul,
     matMinus,
     matAdd,
-    learningRate,
     feedForward,
     measure,
     outDiffs,
+    updateLoop,
   )
 where
 
@@ -62,24 +62,21 @@ transpose x = map head x : transpose (map tail x)
 
 weights :: [[[Double]]]
 weights =
-  [ [ [0.01, 0.02, 0.03, 0.07],
-      [0.04, 0.05, 0.02, 0.04],
-      [0.07, 0.03, 0.01, 0.03],
-      [0.02, 0.06, 0.07, 0.08],
-      [0.05, 0.02, 0.04, 0.01]
+  [ [ [0.1, 0.2, 0.3, 0.7],
+      [0.4, 0.5, 0.2, 0.4],
+      [0.7, 0.3, 0.1, 0.3],
+      [0.2, 0.6, 0.7, 0.8],
+      [0.5, 0.2, 0.4, 0.1]
     ],
-    [ [0.09, 0.02, 0.03],
-      [0.04, 0.07, 0.07],
-      [0.01, 0.04, 0.08],
-      [0.02, 0.02, 0.07]
+    [ [0.9, 0.2, 0.3],
+      [0.4, 0.7, 0.7],
+      [0.1, 0.4, 0.8],
+      [0.2, 0.2, 0.7]
     ]
   ]
 
 e :: Double
 e = 1 + sum [1 / product [1 .. n] | n <- [1 .. 10]]
-
-learningRate :: Double
-learningRate = 0.01
 
 layers :: Int
 layers = 2
@@ -108,8 +105,8 @@ errLayer' p q t = hadamard (vecMinus p t) q
 midLayer' :: [Double] -> [Double] -> [[Double]] -> [Double]
 midLayer' p q w = hadamard (vecByMat p (transpose w)) q
 
-updates :: Int -> [[Double]] -> [[Double]] -> [[Double]]
-updates a i u = if a == 0 then (tensor (i !! a) (vecMul learningRate (u !! a))) else matAdd (updates (a - 1) i u) (tensor (i !! a) (vecMul learningRate (u !! a)))
+updates :: Double -> Int -> [[Double]] -> [[Double]] -> [[Double]]
+updates l a i u = if a == 0 then (tensor (i !! a) (vecMul l (u !! a))) else matAdd (updates (a - 1) i u) (tensor (i !! a) (vecMul l (u !! a)))
 
 feedForward :: Int -> [[Double]] -> [[[Double]]] -> [[Double]]
 feedForward a inp wgts =
@@ -126,8 +123,11 @@ outDiffs a inp wgts tgts =
     then [hadamard (vecMinus ((feedForward 1 inp wgts) !! n) (tgts !! n)) (output' ((feedForward 0 inp wgts) !! n) (wgts !! 1)) | n <- [0 .. length inp - 1]]
     else [hadamard (vecByMat ((outDiffs (a -1) inp wgts tgts) !! n) (transpose (wgts !! 1))) (1 : (output' (inp !! n) (wgts !! 0))) | n <- [0 .. length inp - 1]]
 
-weightUpdate :: [[Double]] -> [[[Double]]] -> [[Double]] -> [[[Double]]]
-weightUpdate i wgts t =
-  [ matMinus (wgts !! 0) (updates (length i -1) i (outDiffs 1 i wgts t)),
-    matMinus (wgts !! 1) (updates (length i -1) (feedForward 0 i wgts) (outDiffs 0 i wgts t))
+weightUpdate :: [[Double]] -> [[[Double]]] -> [[Double]] -> Double -> [[[Double]]]
+weightUpdate i wgts t l =
+  [ matMinus (wgts !! 0) (updates l (length i -1) i (outDiffs 1 i wgts t)),
+    matMinus (wgts !! 1) (updates l (length i -1) (feedForward 0 i wgts) (outDiffs 0 i wgts t))
   ]
+
+updateLoop :: Double -> Int -> [[Double]] -> [[[Double]]] -> [[Double]] -> [[[Double]]]
+updateLoop learningRate a inp wgts tgts = if a == 0 then weightUpdate inp wgts tgts learningRate else weightUpdate inp (updateLoop (a -1) inp wgts tgts) tgts learningRate

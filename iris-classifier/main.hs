@@ -20,26 +20,18 @@ main = do
   let targets = [[fromIntegral (fromEnum (i == n)) | i <- individuals] | n <- labels]
 
   -- test inputs
+  let epochs = 100
   let example = 120
+  let learningRate = 0.1
 
   let inputData = [inp !! n | n <- [(i `mod` 10) * 15 + (i `div` 10) | i <- [0 .. length inp - 1]]]
   let targetData = [targets !! n | n <- [(i `mod` 10) * 15 + (i `div` 10) | i <- [0 .. length inp - 1]]]
 
   let measure_0 = measure inputData weights targetData
 
-  let weights_1 = weightUpdate weights inputData targetData
-  let measure_1 = measure inputData weights_1 targetData
+  let weights_0 = updateLoop learningRate epochs inputData weights targets
 
-  let weights_2 = weightUpdate weights_1 inputData targetData
-  let measure_2 = measure inputData weights_2 targetData
+  let measure_1 = measure inputData weights_0 targetData
 
-  let weights_3 = weightUpdate weights_2 inputData targetData
-  let measure_3 = measure inputData weights_3 targetData
-
-  let weights_4 = weightUpdate weights_3 inputData targetData
-  let measure_4 = measure inputData weights_4 targetData
-
-  let weights_5 = weightUpdate weights_4 inputData targetData
-  let measure_5 = measure inputData weights_5 targetData
-
-  print (measure_0 !! example, measure_5 !! example, (feedForward 1 inputData weights_5) !! example)
+  print (measure_0 !! example, measure_1 !! example)
+  print (targetData !! example, (feedForward 1 inputData weights_0) !! example)
