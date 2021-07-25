@@ -19,15 +19,27 @@ main = do
   let targets = [[fromIntegral (fromEnum (i == n)) | i <- individuals] | n <- labels]
 
   -- test inputs
-  let n = 120
+  let example = 20
 
   let o_1 = [1 : output (inp !! n) (weights !! 0) | n <- [0 .. length inp -1]]
-  let o_2 = [output n (weights !! 1) | n <- o_1]
-  let measure = [errLayer (o_2 !! n) (targets !! n) | n <- [0 .. length inp - 1]]
+  let measure_0 = [errLayer ((feedForward 1 inp weights) !! n) (targets !! n) | n <- [0 .. length inp - 1]]
 
-  let u_0 = [hadamard (vecMinus (o_2 !! n) (targets !! n)) (output' (o_1 !! n) (weights !! 1)) | n <- [0 .. length inp - 1]]
+  let u_0 = [hadamard (vecMinus ((feedForward 1 inp weights) !! n) (targets !! n)) (output' (o_1 !! n) (weights !! 1)) | n <- [0 .. length inp - 1]]
   let u_1 = [hadamard (vecByMat (u_0 !! n) (transpose (weights !! 1))) (1 : (output' (inp !! n) (weights !! 0))) | n <- [0 .. length inp - 1]]
+  let updates_0 = [updates (length inp -1) inp u_1, updates (length inp -1) o_1 u_0]
+  let weights_1 = [matMinus (weights !! n) (updates_0 !! n) | n <- [0 .. length updates_0 - 1]]
 
-  let newWeights = [update (weights !! 0) (inp !! n) (u_1 !! n), update (weights !! 1) (o_1 !! n) (u_0 !! n)]
+  let o_3 = [1 : output (inp !! n) (weights_1 !! 0) | n <- [0 .. length inp -1]]
+  let o_4 = [output n (weights_1 !! 1) | n <- o_3]
+  let measure_1 = [errLayer (o_4 !! n) (targets !! n) | n <- [0 .. length inp - 1]]
 
-  print (o_2 !! n, output (1 : (output (inp !! n) (newWeights !! 0))) (newWeights !! 1), (targets !! n))
+  let u_2 = [hadamard (vecMinus (o_4 !! n) (targets !! n)) (output' (o_3 !! n) (weights_1 !! 1)) | n <- [0 .. length inp - 1]]
+  let u_3 = [hadamard (vecByMat (u_2 !! n) (transpose (weights_1 !! 1))) (1 : (output' (inp !! n) (weights_1 !! 0))) | n <- [0 .. length inp - 1]]
+  let updates_1 = [updates (length inp -1) inp u_3, updates (length inp -1) o_3 u_2]
+  let weights_2 = [matMinus (weights_1 !! n) (updates_1 !! n) | n <- [0 .. length updates_1 - 1]]
+
+  let o_5 = [1 : output (inp !! n) (weights_2 !! 0) | n <- [0 .. length inp -1]]
+  let o_6 = [output n (weights_2 !! 1) | n <- o_5]
+  let measure_2 = [errLayer (o_6 !! n) (targets !! n) | n <- [0 .. length inp - 1]]
+
+  print (measure_0 !! example, measure_2 !! example)
