@@ -106,7 +106,7 @@ midLayer' :: [Double] -> [Double] -> [[Double]] -> [Double]
 midLayer' p q w = hadamard (vecByMat p (transpose w)) q
 
 updates :: Double -> Int -> [[Double]] -> [[Double]] -> [[Double]]
-updates l a i u = if a == 0 then (tensor (i !! a) (vecMul l (u !! a))) else matAdd (updates (a - 1) i u) (tensor (i !! a) (vecMul l (u !! a)))
+updates l a i u = if a == 0 then (tensor (i !! a) (vecMul l (u !! a))) else matAdd (updates l (a - 1) i u) (tensor (i !! a) (vecMul l (u !! a)))
 
 feedForward :: Int -> [[Double]] -> [[[Double]]] -> [[Double]]
 feedForward a inp wgts =
@@ -130,4 +130,4 @@ weightUpdate i wgts t l =
   ]
 
 updateLoop :: Double -> Int -> [[Double]] -> [[[Double]]] -> [[Double]] -> [[[Double]]]
-updateLoop learningRate a inp wgts tgts = if a == 0 then weightUpdate inp wgts tgts learningRate else weightUpdate inp (updateLoop (a -1) inp wgts tgts) tgts learningRate
+updateLoop learningRate a inp wgts tgts = if a == 0 then weightUpdate inp wgts tgts learningRate else weightUpdate inp (updateLoop learningRate (a -1) inp wgts tgts) tgts learningRate
