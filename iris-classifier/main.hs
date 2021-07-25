@@ -21,13 +21,13 @@ main = do
   -- test inputs
   let n = 120
 
-  let o_1 = 1 : output (inp !! n) (weights !! 0)
-  let o_2 = output o_1 (weights !! 1)
-  let measure = errLayer o_2 (targets !! n)
+  let o_1 = [1 : output (inp !! n) (weights !! 0) | n <- [0 .. length inp -1]]
+  let o_2 = [output n (weights !! 1) | n <- o_1]
+  let measure = [errLayer (o_2 !! n) (targets !! n) | n <- [0 .. length inp - 1]]
 
-  let u_0 = hadamard (vecMinus o_2 (targets !! n)) (output' o_1 (weights !! 1))
-  let u_1 = hadamard (vecByMat u_0 (transpose (weights !! 1))) (1 : (output' (inp !! n) (weights !! 0)))
+  let u_0 = [hadamard (vecMinus (o_2 !! n) (targets !! n)) (output' (o_1 !! n) (weights !! 1)) | n <- [0 .. length inp - 1]]
+  let u_1 = [hadamard (vecByMat (u_0 !! n) (transpose (weights !! 1))) (1 : (output' (inp !! n) (weights !! 0))) | n <- [0 .. length inp - 1]]
 
-  let newWeights = [matMinus (weights !! 0) (tensor (inp !! n) (vecMul 0.1 u_1)), matMinus (weights !! 1) (tensor o_1 (vecMul 0.1 u_0))]
+  let newWeights = [update (weights !! 0) (inp !! n) (u_1 !! n), update (weights !! 1) (o_1 !! n) (u_0 !! n)]
 
-  print (o_2, output (1 : (output (inp !! n) (newWeights !! 0))) (newWeights !! 1), (targets !! n))
+  print (o_2 !! n, output (1 : (output (inp !! n) (newWeights !! 0))) (newWeights !! 1), (targets !! n))
