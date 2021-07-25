@@ -21,8 +21,8 @@ main =
     let targets = [[fromIntegral (fromEnum (i == n)) | i <- individuals] | n <- labels]
 
     -- test inputs
-    let epochs = 2
-    let example = 30
+    let epochs = 1
+    let example = 1
     let learningRate = 0.01
 
     let inputData = [inp !! n | n <- [(i `mod` 3) * 50 + (i `div` 3) | i <- [0 .. length inp - 1]]]
@@ -37,4 +37,6 @@ main =
     print (measure_0 !! example)
     print (measure_1 !! example)
 
---print (targetData !! example, (feedForward 1 inputData weights) !! example, (feedForward 1 inputData weights_0) !! example)
+    print (targetData !! example)
+    print ((feedForward (length weights - 1) inputData weights) !! example)
+    print ((feedForward (length weights_0 - 1) inputData weights_0) !! example)

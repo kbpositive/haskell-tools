@@ -6,9 +6,7 @@ module Classifier
     e,
     output,
     output',
-    err,
-    errLayer,
-    errLayer',
+    errDiff,
     sigmoid,
     sigmoid',
     updates,
@@ -68,25 +66,7 @@ weights =
       [0.02, 0.06, 0.07, 0.08],
       [0.05, 0.02, 0.04, 0.01]
     ],
-    [ [0.09, 0.02, 0.08, 0.03, 0.02, 0.08, 0.03, 0.02, 0.08, 0.03, 0.02, 0.08, 0.03, 0.02, 0.08, 0.03],
-      [0.04, 0.02, 0.03, 0.05, 0.02, 0.03, 0.05, 0.02, 0.03, 0.05, 0.02, 0.03, 0.05, 0.02, 0.03, 0.05],
-      [0.01, 0.01, 0.04, 0.08, 0.01, 0.04, 0.08, 0.01, 0.04, 0.08, 0.01, 0.04, 0.08, 0.01, 0.04, 0.08],
-      [0.04, 0.08, 0.02, 0.08, 0.08, 0.02, 0.08, 0.08, 0.02, 0.08, 0.08, 0.02, 0.08, 0.08, 0.02, 0.08],
-      [0.02, 0.07, 0.06, 0.03, 0.07, 0.06, 0.03, 0.07, 0.06, 0.03, 0.07, 0.06, 0.03, 0.07, 0.06, 0.03]
-    ],
     [ [0.09, 0.02, 0.03],
-      [0.06, 0.04, 0.08],
-      [0.04, 0.01, 0.07],
-      [0.07, 0.04, 0.03],
-      [0.06, 0.04, 0.08],
-      [0.04, 0.01, 0.07],
-      [0.07, 0.04, 0.03],
-      [0.06, 0.04, 0.08],
-      [0.04, 0.01, 0.07],
-      [0.07, 0.04, 0.03],
-      [0.06, 0.04, 0.08],
-      [0.04, 0.01, 0.07],
-      [0.07, 0.04, 0.03],
       [0.06, 0.04, 0.08],
       [0.04, 0.01, 0.07],
       [0.07, 0.04, 0.03],
@@ -96,6 +76,12 @@ weights =
 
 e :: Double
 e = 1 + sum [1 / product [1 .. n] | n <- [1 .. 10]]
+
+softmax :: Double -> [Double] -> Double
+softmax p q = (e ** p) / (sum [e ** n | n <- q])
+
+softmax' :: [Double] -> [Double] -> [Double]
+softmax' p q = [- ((softmax (q !! n) q) - (p !! n)) * log (softmax (q !! n) q) | n <- [0 .. length p - 1]]
 
 sigmoid :: Double -> Double
 sigmoid x = 1 / (1 + e ** (- x))
@@ -109,14 +95,14 @@ output x y = [sigmoid i | i <- vecByMat x y]
 output' :: [Double] -> [[Double]] -> [Double]
 output' x y = [sigmoid' i | i <- vecByMat x y]
 
-err :: Double -> Double -> Double
-err p t = ((p - t) ** 2) / 2
-
 errLayer :: [Double] -> [Double] -> [Double]
-errLayer p t = [err (p !! n) (t !! n) | n <- [0 .. length p -1]]
+errLayer p t = [((((p !! n) - (t !! n)) / 2) ** 2) | n <- [0 .. length p - 1]]
 
-errLayer' :: [Double] -> [Double] -> [Double] -> [Double]
-errLayer' p q t = hadamard (errLayer p t) q
+errLayer' :: [Double] -> [Double] -> [Double]
+errLayer' p t = [(softmax' p t) !! n | n <- [0 .. length p - 1]]
+
+errDiff :: [Double] -> [Double] -> [Double] -> [Double]
+errDiff p t q = hadamard (errLayer' p t) q
 
 midLayer' :: [Double] -> [[Double]] -> [Double] -> [Double]
 midLayer' p w q = hadamard (vecByMat p (transpose w)) q
@@ -139,7 +125,7 @@ measure inp wgts tgts = [errLayer ((feedForward (length wgts - 1) inp wgts) !! n
 outDiffs :: Int -> [[Double]] -> [[[Double]]] -> [[Double]] -> [[Double]]
 outDiffs a inp wgts tgts =
   if a == 0
-    then [errLayer' ((feedForward (length wgts - 1) inp wgts) !! n) (tgts !! n) (output' ((feedForward (length wgts - 2) inp wgts) !! n) (wgts !! ((length wgts - 1) - a))) | n <- [0 .. length inp - 1]]
+    then [errDiff ((feedForward (length wgts - 1) inp wgts) !! n) (tgts !! n) (output' ((feedForward (length wgts - 2) inp wgts) !! n) (wgts !! ((length wgts - 1) - a))) | n <- [0 .. length inp - 1]]
     else
       if a < length wgts - 1
         then [midLayer' ((outDiffs (a - 1) inp wgts tgts) !! n) (wgts !! (length wgts - a)) (1 : (output' ((feedForward ((length wgts - 1) - a) inp wgts) !! n) (wgts !! ((length wgts - 1) - a)))) | n <- [0 .. length inp - 1]]
@@ -149,7 +135,7 @@ weightUpdate :: Int -> [[Double]] -> [[[Double]]] -> [[Double]] -> Double -> [[D
 weightUpdate a i wgts t l =
   if a == 0
     then matMinus (wgts !! a) (updates l (length i - 1) i (outDiffs (length weights - 1) i wgts t))
-    else matMinus (wgts !! a) (updates l (length i - 1) (feedForward (a -1) i wgts) (outDiffs ((length weights - 1) - a) i wgts t))
+    else matMinus (wgts !! a) (updates l (length i - 1) (feedForward (a - 1) i wgts) (outDiffs ((length weights - 1) - a) i wgts t))
 
 updateLoop :: Double -> Int -> [[Double]] -> [[[Double]]] -> [[Double]] -> [[[Double]]]
 updateLoop learningRate a inp wgts tgts = if a == 0 then [weightUpdate n inp wgts tgts learningRate | n <- [0 .. length weights - 1]] else [weightUpdate n inp (updateLoop learningRate (a -1) inp wgts tgts) tgts learningRate | n <- [0 .. length weights - 1]]
