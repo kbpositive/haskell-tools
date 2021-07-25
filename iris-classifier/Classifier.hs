@@ -93,5 +93,5 @@ errLayer' p q t = hadamard (vecMinus p t) q
 midLayer' :: [Double] -> [Double] -> [[Double]] -> [Double]
 midLayer' p q w = hadamard (vecByMat p (transpose w)) q
 
-update :: [Double] -> [[Double]] -> [Double] -> [[Double]]
-update i wgts u = matMinus wgts (tensor i (vecMul 0.1 u))
+update :: [[Double]] -> [Double] -> [Double] -> [[Double]]
+update wgts i u = matMinus wgts (tensor i (vecMul 0.1 u))
