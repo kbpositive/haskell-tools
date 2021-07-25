@@ -23,6 +23,7 @@ module Classifier
     learningRate,
     feedForward,
     measure,
+    outDiffs,
   )
 where
 
@@ -78,7 +79,7 @@ e :: Double
 e = 1 + sum [1 / product [1 .. n] | n <- [1 .. 10]]
 
 learningRate :: Double
-learningRate = 0.001
+learningRate = 0.01
 
 layers :: Int
 layers = 2
@@ -110,9 +111,6 @@ midLayer' p q w = hadamard (vecByMat p (transpose w)) q
 updates :: Int -> [[Double]] -> [[Double]] -> [[Double]]
 updates a i u = if a == 0 then (tensor (i !! a) (vecMul learningRate (u !! a))) else matAdd (updates (a - 1) i u) (tensor (i !! a) (vecMul learningRate (u !! a)))
 
-weightUpdate :: [[Double]] -> [[Double]] -> [[Double]] -> [[Double]]
-weightUpdate wgts i u = matMinus wgts (updates (length i - 1) i u)
-
 feedForward :: Int -> [[Double]] -> [[[Double]]] -> [[Double]]
 feedForward a inp wgts =
   if a == 0
@@ -122,16 +120,14 @@ feedForward a inp wgts =
 measure :: [[Double]] -> [[[Double]]] -> [[Double]] -> [[Double]]
 measure inp wgts tgts = [errLayer ((feedForward 1 inp wgts) !! n) (tgts !! n) | n <- [0 .. length tgts - 1]]
 
---halfProduct :: Int -> [[Double]] -> [[Double]] -> [[Double]] -> [[Double]] -> [[Double]]
---halfProduct a inp out wgts tgts = if a == 0 then [hadamard (vecMinus ((out!!1) !! n) (tgts !! n)) (output' ((out!!0) !! n) (wgts !! 1)) | n <- [0 .. length inp - 1]]
---else [hadamard (vecByMat ((halfProduct (a-1) inp out wgts tgts) !! n) (transpose (wgts !! 1))) (1 : (output' (inp !! n) (wgts !! 0))) | n <- [0 .. length inp - 1]]
---
---ediffs :: Int -> [[Double]] -> [[Double]] -> [[Double]] -> [[Double]] -> [[Double]]
---ediffs a inp out wgts tgts = [n | n <- (halfProduct a inp out wgts tgts)]
---
---  let updates_0 = [updates (length inp -1) inp (ediffs layers inp)!!1, updates (length inp -1) o_1 u_0]
---  let weights_1 = [matMinus (weights !! n) (updates_0 !! n) | n <- [0 .. length updates_0 - 1]]
---
---  let o_3 = [1 : output (inp !! n) (weights_1 !! 0) | n <- [0 .. length inp -1]]
---  let o_4 = [output n (weights_1 !! 1) | n <- o_3]
---  let measure_1 = [errLayer (o_4 !! n) (targets !! n) | n <- [0 .. length inp - 1]]
+outDiffs :: Int -> [[Double]] -> [[[Double]]] -> [[Double]] -> [[Double]]
+outDiffs a inp wgts tgts =
+  if a == 0
+    then [hadamard (vecMinus ((feedForward 1 inp wgts) !! n) (tgts !! n)) (output' ((feedForward 0 inp wgts) !! n) (wgts !! 1)) | n <- [0 .. length inp - 1]]
+    else [hadamard (vecByMat ((outDiffs (a -1) inp wgts tgts) !! n) (transpose (wgts !! 1))) (1 : (output' (inp !! n) (wgts !! 0))) | n <- [0 .. length inp - 1]]
+
+weightUpdate :: [[Double]] -> [[[Double]]] -> [[Double]] -> [[[Double]]]
+weightUpdate i wgts t =
+  [ matMinus (wgts !! 0) (updates (length i -1) i (outDiffs 1 i wgts t)),
+    matMinus (wgts !! 1) (updates (length i -1) (feedForward 0 i wgts) (outDiffs 0 i wgts t))
+  ]

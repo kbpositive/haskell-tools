@@ -12,6 +12,7 @@ main = do
   let commas_pos = [0 : [x + 1 | (x, y) <- zip [0 ..] n, [y] == "," || x == (length n -1)] | n <- iris_data]
   let instances_split = [[[(iris_data !! n) !! i | i <- [(commas_pos !! n) !! i .. ((commas_pos !! n) !! (i + 1)) -1]] | i <- [0 .. length (commas_pos !! n) - 2]] | n <- [0 .. length iris_data -1]]
   let inp = [(1.0 : [read (init n) :: Double | n <- init i]) | i <- instances_split]
+
   let commas_pos = [0 : [x + 1 | (x, y) <- zip [0 ..] n, [y] == "," || x == (length n -1)] | n <- iris_data]
   let labels = [last i | i <- instances_split]
   let individuals = [labels !! (i - 1) | i <- [1 .. length labels - 1], labels !! (i -1) /= labels !! i || i == (length labels - 1)]
@@ -21,20 +22,24 @@ main = do
   -- test inputs
   let example = 120
 
-  let measure_0 = measure inp weights targets
+  let inputData = [inp !! n | n <- [(i `mod` 10) * 15 + (i `div` 10) | i <- [0 .. length inp - 1]]]
+  let targetData = [targets !! n | n <- [(i `mod` 10) * 15 + (i `div` 10) | i <- [0 .. length inp - 1]]]
 
-  let u_0 = [hadamard (vecMinus ((feedForward 1 inp weights) !! n) (targets !! n)) (output' ((feedForward 0 inp weights) !! n) (weights !! 1)) | n <- [0 .. length inp - 1]]
-  let u_1 = [hadamard (vecByMat (u_0 !! n) (transpose (weights !! 1))) (1 : (output' (inp !! n) (weights !! 0))) | n <- [0 .. length inp - 1]]
-  let updates_0 = [updates (length inp -1) inp u_1, updates (length inp -1) (feedForward 0 inp weights) u_0]
-  let weights_1 = [matMinus (weights !! n) (updates_0 !! n) | n <- [0 .. length updates_0 - 1]]
+  let measure_0 = measure inputData weights targetData
 
-  let measure_1 = measure inp weights_1 targets
+  let weights_1 = weightUpdate weights inputData targetData
+  let measure_1 = measure inputData weights_1 targetData
 
-  let u_2 = [hadamard (vecMinus ((feedForward 1 inp weights_1) !! n) (targets !! n)) (output' ((feedForward 0 inp weights_1) !! n) (weights_1 !! 1)) | n <- [0 .. length inp - 1]]
-  let u_3 = [hadamard (vecByMat (u_2 !! n) (transpose (weights_1 !! 1))) (1 : (output' (inp !! n) (weights_1 !! 0))) | n <- [0 .. length inp - 1]]
-  let updates_1 = [updates (length inp -1) inp u_3, updates (length inp -1) (feedForward 0 inp weights_1) u_2]
-  let weights_2 = [matMinus (weights_1 !! n) (updates_1 !! n) | n <- [0 .. length updates_1 - 1]]
+  let weights_2 = weightUpdate weights_1 inputData targetData
+  let measure_2 = measure inputData weights_2 targetData
 
-  let measure_2 = measure inp weights_2 targets
+  let weights_3 = weightUpdate weights_2 inputData targetData
+  let measure_3 = measure inputData weights_3 targetData
 
-  print (measure_0 !! example, measure_2 !! example)
+  let weights_4 = weightUpdate weights_3 inputData targetData
+  let measure_4 = measure inputData weights_4 targetData
+
+  let weights_5 = weightUpdate weights_4 inputData targetData
+  let measure_5 = measure inputData weights_5 targetData
+
+  print (measure_0 !! example, measure_5 !! example, (feedForward 1 inputData weights_5) !! example)
