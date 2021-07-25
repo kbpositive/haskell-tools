@@ -62,24 +62,40 @@ transpose x = map head x : transpose (map tail x)
 
 weights :: [[[Double]]]
 weights =
-  [ [ [0.1, 0.2, 0.3, 0.7],
-      [0.4, 0.5, 0.2, 0.4],
-      [0.7, 0.3, 0.1, 0.3],
-      [0.2, 0.6, 0.7, 0.8],
-      [0.5, 0.2, 0.4, 0.1]
+  [ [ [0.01, 0.02, 0.03, 0.07],
+      [0.04, 0.05, 0.02, 0.04],
+      [0.07, 0.03, 0.01, 0.03],
+      [0.02, 0.06, 0.07, 0.08],
+      [0.05, 0.02, 0.04, 0.01]
     ],
-    [ [0.9, 0.2, 0.3],
-      [0.4, 0.7, 0.7],
-      [0.1, 0.4, 0.8],
-      [0.2, 0.2, 0.7]
+    [ [0.09, 0.02, 0.08, 0.03, 0.02, 0.08, 0.03, 0.02, 0.08, 0.03, 0.02, 0.08, 0.03, 0.02, 0.08, 0.03],
+      [0.04, 0.02, 0.03, 0.05, 0.02, 0.03, 0.05, 0.02, 0.03, 0.05, 0.02, 0.03, 0.05, 0.02, 0.03, 0.05],
+      [0.01, 0.01, 0.04, 0.08, 0.01, 0.04, 0.08, 0.01, 0.04, 0.08, 0.01, 0.04, 0.08, 0.01, 0.04, 0.08],
+      [0.04, 0.08, 0.02, 0.08, 0.08, 0.02, 0.08, 0.08, 0.02, 0.08, 0.08, 0.02, 0.08, 0.08, 0.02, 0.08],
+      [0.02, 0.07, 0.06, 0.03, 0.07, 0.06, 0.03, 0.07, 0.06, 0.03, 0.07, 0.06, 0.03, 0.07, 0.06, 0.03]
+    ],
+    [ [0.09, 0.02, 0.03],
+      [0.06, 0.04, 0.08],
+      [0.04, 0.01, 0.07],
+      [0.07, 0.04, 0.03],
+      [0.06, 0.04, 0.08],
+      [0.04, 0.01, 0.07],
+      [0.07, 0.04, 0.03],
+      [0.06, 0.04, 0.08],
+      [0.04, 0.01, 0.07],
+      [0.07, 0.04, 0.03],
+      [0.06, 0.04, 0.08],
+      [0.04, 0.01, 0.07],
+      [0.07, 0.04, 0.03],
+      [0.06, 0.04, 0.08],
+      [0.04, 0.01, 0.07],
+      [0.07, 0.04, 0.03],
+      [0.09, 0.07, 0.07]
     ]
   ]
 
 e :: Double
 e = 1 + sum [1 / product [1 .. n] | n <- [1 .. 10]]
-
-layers :: Int
-layers = 2
 
 sigmoid :: Double -> Double
 sigmoid x = 1 / (1 + e ** (- x))
@@ -100,10 +116,10 @@ errLayer :: [Double] -> [Double] -> [Double]
 errLayer p t = [err (p !! n) (t !! n) | n <- [0 .. length p -1]]
 
 errLayer' :: [Double] -> [Double] -> [Double] -> [Double]
-errLayer' p q t = hadamard (vecMinus p t) q
+errLayer' p q t = hadamard (errLayer p t) q
 
-midLayer' :: [Double] -> [Double] -> [[Double]] -> [Double]
-midLayer' p q w = hadamard (vecByMat p (transpose w)) q
+midLayer' :: [Double] -> [[Double]] -> [Double] -> [Double]
+midLayer' p w q = hadamard (vecByMat p (transpose w)) q
 
 updates :: Double -> Int -> [[Double]] -> [[Double]] -> [[Double]]
 updates l a i u = if a == 0 then (tensor (i !! a) (vecMul l (u !! a))) else matAdd (updates l (a - 1) i u) (tensor (i !! a) (vecMul l (u !! a)))
@@ -111,23 +127,29 @@ updates l a i u = if a == 0 then (tensor (i !! a) (vecMul l (u !! a))) else matA
 feedForward :: Int -> [[Double]] -> [[[Double]]] -> [[Double]]
 feedForward a inp wgts =
   if a == 0
-    then [1 : output (inp !! n) (wgts !! 0) | n <- [0 .. length inp -1]]
-    else [output n (wgts !! 1) | n <- (feedForward (a -1) inp wgts)]
+    then [1 : output (inp !! n) (wgts !! a) | n <- [0 .. length inp -1]]
+    else
+      if a < length wgts - 1
+        then [1 : output n (wgts !! a) | n <- (feedForward (a -1) inp wgts)]
+        else [output n (wgts !! a) | n <- (feedForward (a -1) inp wgts)]
 
 measure :: [[Double]] -> [[[Double]]] -> [[Double]] -> [[Double]]
-measure inp wgts tgts = [errLayer ((feedForward 1 inp wgts) !! n) (tgts !! n) | n <- [0 .. length tgts - 1]]
+measure inp wgts tgts = [errLayer ((feedForward (length wgts - 1) inp wgts) !! n) (tgts !! n) | n <- [0 .. length tgts - 1]]
 
 outDiffs :: Int -> [[Double]] -> [[[Double]]] -> [[Double]] -> [[Double]]
 outDiffs a inp wgts tgts =
   if a == 0
-    then [hadamard (vecMinus ((feedForward 1 inp wgts) !! n) (tgts !! n)) (output' ((feedForward 0 inp wgts) !! n) (wgts !! 1)) | n <- [0 .. length inp - 1]]
-    else [hadamard (vecByMat ((outDiffs (a -1) inp wgts tgts) !! n) (transpose (wgts !! 1))) (1 : (output' (inp !! n) (wgts !! 0))) | n <- [0 .. length inp - 1]]
+    then [errLayer' ((feedForward (length wgts - 1) inp wgts) !! n) (tgts !! n) (output' ((feedForward (length wgts - 2) inp wgts) !! n) (wgts !! ((length wgts - 1) - a))) | n <- [0 .. length inp - 1]]
+    else
+      if a < length wgts - 1
+        then [midLayer' ((outDiffs (a - 1) inp wgts tgts) !! n) (wgts !! (length wgts - a)) (1 : (output' ((feedForward ((length wgts - 1) - a) inp wgts) !! n) (wgts !! ((length wgts - 1) - a)))) | n <- [0 .. length inp - 1]]
+        else [midLayer' ((outDiffs (a - 1) inp wgts tgts) !! n) (wgts !! (length wgts - a)) (1 : (output' (inp !! n) (wgts !! ((length wgts - 1) - a)))) | n <- [0 .. length inp - 1]]
 
-weightUpdate :: [[Double]] -> [[[Double]]] -> [[Double]] -> Double -> [[[Double]]]
-weightUpdate i wgts t l =
-  [ matMinus (wgts !! 0) (updates l (length i -1) i (outDiffs 1 i wgts t)),
-    matMinus (wgts !! 1) (updates l (length i -1) (feedForward 0 i wgts) (outDiffs 0 i wgts t))
-  ]
+weightUpdate :: Int -> [[Double]] -> [[[Double]]] -> [[Double]] -> Double -> [[Double]]
+weightUpdate a i wgts t l =
+  if a == 0
+    then matMinus (wgts !! a) (updates l (length i - 1) i (outDiffs (length weights - 1) i wgts t))
+    else matMinus (wgts !! a) (updates l (length i - 1) (feedForward (a -1) i wgts) (outDiffs ((length weights - 1) - a) i wgts t))
 
 updateLoop :: Double -> Int -> [[Double]] -> [[[Double]]] -> [[Double]] -> [[[Double]]]
-updateLoop learningRate a inp wgts tgts = if a == 0 then weightUpdate inp wgts tgts learningRate else weightUpdate inp (updateLoop learningRate (a -1) inp wgts tgts) tgts learningRate
+updateLoop learningRate a inp wgts tgts = if a == 0 then [weightUpdate n inp wgts tgts learningRate | n <- [0 .. length weights - 1]] else [weightUpdate n inp (updateLoop learningRate (a -1) inp wgts tgts) tgts learningRate | n <- [0 .. length weights - 1]]
